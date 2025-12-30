@@ -1,0 +1,100 @@
+.auth-container {
+  background-image: url("../src//assets//images/auth-bg.jpg");
+  background-size: cover;
+  background-position: center center;
+}
+
+.bg-overlay {
+  background: linear-gradient(45deg, rgba(47, 140, 96, 0.6), rgba(0, 0, 0, 0.99));
+}
+
+.btn-green {
+  background-color: rgba(74, 163, 90, 1);
+  color: white;
+  font-weight: 700;
+}
+
+.btn-green:hover {
+  background-color: rgba(66, 148, 81, 0.85);
+  color: white;
+}
+
+.sidebar-container .ps-sidebar-container {
+  background-color: rgba(31, 38, 62, 1);
+  border-top-right-radius: 45px;
+  color: white;
+  min-height: 100vh;
+}
+
+.sidebar-container .css-1t8x7v1>.ps-menu-button {
+  transition: all 0.5s;
+}
+
+.sidebar-container .css-1t8x7v1>.ps-menu-button:hover {
+  background-color: rgba(0, 146, 77, 0.1);
+  border-left: 5px solid rgba(0, 146, 71, 1);
+}
+
+/* Move The Moule Style (css dashboard) */
+.home-details {
+  background-color: rgba(240, 255, 239, 1);
+}
+
+.recipe-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* ==========================Table Style======================= */
+
+.table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+  background-color: #fff;
+  margin-top: 20px;
+}
+
+.table-container .table thead th {
+  background-color: #e2e5eb !important;
+  padding: 15px 20px !important;
+  color: #3f3f3f;
+  font-weight: 600;
+  border: none;
+}
+
+.table tbody tr td {
+  padding: 15px 20px !important;
+  vertical-align: middle;
+  background-color: #fff;
+}
+
+/* إخفاء السهم الصغير بتاع الـ Dropdown */
+.dropdown-toggle::after {
+  display: none !important;
+}
+
+.dropdown-toggle:focus,
+.dropdown-toggle:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.dropdown-menu {
+  border-radius: 12px !important;
+  padding: 10px !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
+}
+
+.dropdown-item {
+  padding: 8px 15px !important;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
