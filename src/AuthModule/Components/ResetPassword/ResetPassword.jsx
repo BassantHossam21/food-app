@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "../../../assets/images//logo.png";
 import { useForm } from "react-hook-form";
 import axios from "axios";
@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function ResetPassword() {
   let navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
     register,
     formState: { errors },
@@ -38,8 +40,8 @@ export default function ResetPassword() {
     <>
       <div className="auth-container">
         <div className="container-fluid bg-overlay">
-          <div className="row justify-content-center align-items-center vh-100">
-            <div className="col-lg-5 col-md-7 bg-white p-4 rounded-3">
+          <div className="row justify-content-center align-items-center min-vh-100 py-5">
+            <div className="col-12 col-md-8 col-lg-5 bg-white p-4 p-md-5 rounded-4 shadow-lg">
               <div className="form-container">
                 <div className="logo-container text-center ">
                   <img src={logo} alt="Logo" className="w-50" />
@@ -105,7 +107,7 @@ export default function ResetPassword() {
                       <i className="fa-solid fa-lock"></i>
                     </span>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       {...register("password", {
                         required: "Password is required",
                         pattern: {
@@ -120,6 +122,13 @@ export default function ResetPassword() {
                       aria-label="New Password"
                       aria-describedby="basic-addon1"
                     />
+                    <span
+                      className="input-group-text"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                    </span>
                   </div>
                   {errors.password && (
                     <div className="alert alert-danger p-2">
@@ -131,7 +140,7 @@ export default function ResetPassword() {
                       <i className="fa-solid fa-lock"></i>
                     </span>
                     <input
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       {...register("confirmPassword", {
                         required: "Confirm Password is required",
                         validate: (value) =>
@@ -143,6 +152,13 @@ export default function ResetPassword() {
                       aria-label="Confirm New Password"
                       aria-describedby="basic-addon1"
                     />
+                    <span
+                      className="input-group-text"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      <i className={`fa-solid ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                    </span>
                   </div>
                   {errors.confirmPassword && (
                     <div className="alert alert-danger p-2">

@@ -35,8 +35,8 @@ export default function ForgotPassword() {
   return (
     <div className="auth-container">
       <div className=" container-fluid bg-overlay ">
-        <div className="row justify-content-center align-items-center vh-100">
-          <div className="col-md-5 bg-white p-4 rounded-3">
+        <div className="row justify-content-center align-items-center min-vh-100 py-5">
+          <div className="col-12 col-md-8 col-lg-5 bg-white p-4 p-md-5 rounded-4 shadow-lg">
             <div className="form-container">
               <div className="logo-container text-center ">
                 <img src={logo} alt="Logo" className="w-50" />
