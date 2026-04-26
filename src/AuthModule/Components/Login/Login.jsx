@@ -1,11 +1,14 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import logo from "../../../assets/images/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { toast } from "react-toastify";
+import axios from "axios";
 import { AuthContext } from "../../../Context/AuthContext";
+
+
 export default function Login() {
+  const [showPassword, setShowPassword] = useState(false);
   let { saveLoginData } = useContext(AuthContext);
   let navigate = useNavigate();
   let {
@@ -19,7 +22,7 @@ export default function Login() {
     try {
       let response = await axios.post(
         "https://upskilling-egypt.com:3006/api/v1/Users/Login",
-        data
+        data,
       );
       console.log(response);
       localStorage.setItem("token", response.data.token);
@@ -39,8 +42,8 @@ export default function Login() {
     <>
       <div className="auth-container">
         <div className="container-fluid bg-overlay">
-          <div className="row justify-content-center align-items-center vh-100">
-            <div className="col-lg-5 col-md-7 bg-white p-4 rounded-3">
+          <div className="row justify-content-center align-items-center min-vh-100 py-5">
+            <div className="col-12 col-md-8 col-lg-5 bg-white p-4 p-md-5 rounded-4 shadow-lg">
               <div className="form-container">
                 <div className="logo-container text-center ">
                   <img src={logo} alt="Logo" className="w-50" />
@@ -81,7 +84,7 @@ export default function Login() {
                       <i className="fa-solid fa-lock"></i>
                     </span>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       {...register("password", {
                         required: "Password is required",
                       })}
@@ -90,6 +93,13 @@ export default function Login() {
                       aria-label="Password"
                       aria-describedby="basic-addon1"
                     />
+                    <span
+                      className="input-group-text"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <i className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}></i>
+                    </span>
                   </div>
                   {errors.password && (
                     <div className="alert alert-danger p-2">

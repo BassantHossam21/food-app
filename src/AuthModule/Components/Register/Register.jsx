@@ -25,8 +25,9 @@ export default function Register() {
     try {
       const response = await axios.post(
         "https://upskilling-egypt.com:3006/api/v1/Users/Register",
-        data
+        data,
       );
+      console.log("Registration Response:", response);
       toast.success(response.data.message || "Registration Successful!");
       navigate("/verify-account");
     } catch (error) {
@@ -34,7 +35,7 @@ export default function Register() {
       console.log("Error Data:", error.response?.data);
       console.log(
         "Validation Errors:",
-        error.response?.data?.additionalInfo?.errors
+        error.response?.data?.additionalInfo?.errors,
       );
 
       // Show detailed error message
@@ -46,7 +47,7 @@ export default function Register() {
       if (validationErrors) {
         console.log(
           "Detailed Validation Errors:",
-          JSON.stringify(validationErrors, null, 2)
+          JSON.stringify(validationErrors, null, 2),
         );
       }
 
@@ -61,8 +62,8 @@ export default function Register() {
   return (
     <div className="auth-container">
       <div className="container-fluid bg-overlay">
-        <div className="row justify-content-center align-items-center vh-100">
-          <div className="col-lg-7 col-md-9 bg-white p-5 rounded-4 shadow-lg">
+        <div className="row justify-content-center align-items-center min-vh-100 py-5">
+          <div className="col-12 col-md-10 col-lg-8 bg-white p-4 p-md-5 rounded-4 shadow-lg">
             <div className="form-container">
               <div className="logo-container text-center ">
                 <img src={logo} alt="Logo" className="w-50" />
@@ -75,7 +76,7 @@ export default function Register() {
               </div>
               {/* Form */}
               <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="row g-3 ">
+                <div className="row g-4 ">
                   {/* Username */}
                   <div className="col-md-6">
                     <div className="input-group">

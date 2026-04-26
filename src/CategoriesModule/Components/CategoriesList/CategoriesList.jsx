@@ -1,42 +1,70 @@
 import React, { useEffect, useState } from "react";
-import HeaderImg2 from "../../../assets/images/Header2.png";
-import Header from "../../../Shared/Components/Header/Header";
-import axios from "axios";
-import NoData from "../../../Shared/Components/NoData/NoData";
 import { useForm } from "react-hook-form";
-
-import Button from "react-bootstrap/Button";
+import axios from "axios";
 import Modal from "react-bootstrap/Modal";
-import DeleteConfirmation from "../../../Shared/Components/DeleteConfirmation/DeleteConfirmation";
 import { Dropdown } from "react-bootstrap";
+import Header from "../../../Shared/Components/Header/Header";
+import DeleteConfirmation from "../../../Shared/Components/DeleteConfirmation/DeleteConfirmation";
+import NoData from "../../../Shared/Components/NoData/NoData";
+import HeaderImg2 from "../../../assets/images/Header2.png";
 
 export default function CategoriesList() {
+  //==============================States==============================
   const [categoriesList, setCategoriesList] = useState([]);
   const [categoryId, setCategoryId] = useState(0);
   const [categoryName, setCategoryName] = useState("");
   const [show, setShow] = useState(false);
-
-  //Add Category
   const [showAdd, setShowAdd] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
+  //==============================Form==============================
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm();
 
+  //==============================Delete Modal Handlers==============================
   const handleClose = () => setShow(false);
   const handleShow = (category) => {
-    setShow(true);
     setCategoryId(category.id);
     setCategoryName(category.name);
+    setShow(true);
   };
 
-  //Add Category(functions)
-  const handleAddClose = () => setShowAdd(false);
-  const handleAddShow = () => setShowAdd(true);
+  //==============================Add/Edit Modal Handlers==============================
+  const handleAddClose = () => {
+    setShowAdd(false);
+    setCategoryId(0);
+    setCategoryName("");
+    reset();
+  };
 
+  const handleAddShow = () => {
+    setCategoryId(0);
+    setCategoryName("");
+    reset();
+    setShowAdd(true);
+  };
+
+  const handleEditShow = (category) => {
+    setCategoryId(category.id);
+    setCategoryName(category.name);
+    setValue("name", category.name);
+    setShowAdd(true);
+  };
+
+  const onSubmit = (data) => {
+    if (categoryId === 0) {
+      addCategory(data);
+    } else {
+      updateCategory(data);
+    }
+  };
+
+  //==============================Get All Categories==============================
   const getAllCategories = async () => {
     try {
       let response = await axios.get(
@@ -45,17 +73,16 @@ export default function CategoriesList() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
-      console.log(response.data.data);
       setCategoriesList(response.data.data);
     } catch (error) {
       console.log(error);
     }
   };
 
+  //==============================Delete Category==============================
   const deleteCategories = async () => {
-    console.log(categoryId);
     try {
       let response = await axios.delete(
         `https://upskilling-egypt.com:3006/api/v1/Category/${categoryId}`,
@@ -63,9 +90,9 @@ export default function CategoriesList() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
-      console.log(response);
+
       getAllCategories();
       handleClose();
     } catch (error) {
@@ -73,7 +100,9 @@ export default function CategoriesList() {
     }
   };
 
+  //==============================Add Category==============================
   const addCategory = async (data) => {
+    setIsLoading(true);
     try {
       let response = await axios.post(
         "https://upskilling-egypt.com:3006/api/v1/Category/",
@@ -82,14 +111,38 @@ export default function CategoriesList() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
-      console.log(response);
       reset();
       getAllCategories();
       handleAddClose();
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  //==============================Update Category==============================
+  const updateCategory = async (data) => {
+    setIsLoading(true);
+    try {
+      let response = await axios.put(
+        `https://upskilling-egypt.com:3006/api/v1/Category/${categoryId}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      reset();
+      getAllCategories();
+      handleAddClose();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,32 +152,45 @@ export default function CategoriesList() {
 
   return (
     <div>
+      {/*========================== Delete Modal ==========================*/}
       <Modal
         show={show}
         onHide={handleClose}
-        backdrop="static"
-        keyboard={false}
+        centered
+        contentClassName="delete-modal"
       >
-        <Modal.Header closeButton>
-          <Modal.Title></Modal.Title>
+        <Modal.Header className="border-0 d-flex justify-content-end p-2 pt-3 pe-3 pb-0">
+          <i
+            className="fa-solid fa-circle-xmark text-danger fs-3 cursor-pointer"
+            onClick={handleClose}
+            style={{ cursor: "pointer" }}
+          ></i>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="px-lg-5 px-4 pt-0">
           <DeleteConfirmation deleteItem="Category" itemName={categoryName} />
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-danger" onClick={deleteCategories}>
-            Delete
-          </Button>
-        </Modal.Footer>
+        <div className="px-lg-5 px-4 pb-4">
+          <hr className="my-3 opacity-25" />
+          <div className="text-end">
+            <button
+              className="btn btn-delete px-5 py-2"
+              onClick={deleteCategories}
+            >
+              Delete this item
+            </button>
+          </div>
+        </div>
       </Modal>
 
-      {/* Add Category Modal */}
+      {/*========================== Add/Edit Category Modal ==========================*/}
       <Modal show={showAdd} onHide={handleAddClose} centered>
         <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold">Add Category</Modal.Title>
+          <Modal.Title className="fw-bold">
+            {categoryId === 0 ? "Add" : "Edit"} Category
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <form onSubmit={handleSubmit(addCategory)}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <div className="mb-4">
               <input
                 type="text"
@@ -141,14 +207,29 @@ export default function CategoriesList() {
               )}
             </div>
             <div className="d-flex justify-content-end border-top pt-3">
-              <button className="btn btn-success px-5 py-2 fw-bold text-white rounded-3 shadow-sm">
-                Save
+              <button
+                disabled={isLoading}
+                className="btn btn-success px-5 py-2 fw-bold text-white rounded-3 shadow-sm d-flex align-items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Loading...
+                  </>
+                ) : (
+                  <>{categoryId === 0 ? "Save" : "Update"}</>
+                )}
               </button>
             </div>
           </form>
         </Modal.Body>
       </Modal>
 
+      {/*========================== Header Section ==========================*/}
       <Header
         title={"Categories Items"}
         description={
@@ -157,67 +238,88 @@ export default function CategoriesList() {
         imgURL={HeaderImg2}
       ></Header>
 
-      <div className="title p-3 d-flex justify-content-between">
-        <h5>Categories Table Details</h5>
-        <button onClick={handleAddShow} className="btn btn-success">
-          Add New Category
+      {/*========================== Category Title Section ==========================*/}
+      <div className="title p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-3">
+        <div>
+          <h4 className="fw-bold mb-0">Categories Table Details</h4>
+          <p className="text-muted mb-0">You can check all details</p>
+        </div>
+        <button
+          onClick={handleAddShow}
+          className="btn btn-success px-5 py-2 btn-responsive"
+        >
+          Add New Item
         </button>
       </div>
 
+      {/*========================== Categories Table Section ==========================*/}
       <div className="table-container m-3 shadow-sm">
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th scope="col">ID</th>
-              <th scope="col">Category Name</th>
-              <th scope="col">Category Creation Data</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {categoriesList.length > 0 ? (
-              categoriesList.map((cateogry) => (
-                <tr key={cateogry.id}>
-                  <th scope="row">{cateogry.id}</th>
-                  <td>{cateogry.name}</td>
-                  <td>{cateogry.creationDate}</td>
-                  <td>
-                    <Dropdown>
-                      <Dropdown.Toggle
-                        variant="link"
-                        id="dropdown-basic"
-                        className="text-dark bg-transparent border-0 p-0 shadow-none outline-none"
-                      >
-                        <i className="fa fa-ellipsis-h" aria-hidden="true"></i>
-                      </Dropdown.Toggle>
-
-                      <Dropdown.Menu className="shadow-sm border-0 rounded-4">
-                        <Dropdown.Item
-                          onClick={() => console.log("View", cateogry)}
+        <div className="table-responsive">
+          <table className="table table-striped mb-0">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Category Name</th>
+                <th scope="col">Category Data</th>
+                <th scope="col" className="text-center">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {categoriesList.length > 0 ? (
+                categoriesList.map((cateogry) => (
+                  <tr key={cateogry.id}>
+                    <th scope="row">#{cateogry.id}</th>
+                    <td>{cateogry.name}</td>
+                    <td>
+                      {new Date(cateogry.creationDate).toLocaleDateString()}
+                    </td>
+                    <td className="text-center">
+                      <Dropdown>
+                        <Dropdown.Toggle
+                          variant="link"
+                          id="dropdown-basic"
+                          className="text-dark bg-transparent border-0 p-0 shadow-none outline-none"
                         >
-                          <i className="fa fa-eye text-success me-2"></i> View
-                        </Dropdown.Item>
-                        <Dropdown.Item>
-                          <i className="fa fa-edit text-success me-2"></i> Edit
-                        </Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleShow(cateogry)}>
-                          <i className="fa fa-trash text-success me-2"></i>
-                          Delete
-                        </Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
+                          <i
+                            className="fa-solid fa-ellipsis-vertical fs-5"
+                            aria-hidden="true"
+                          ></i>
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu className="shadow-sm border-0 rounded-3">
+                          <Dropdown.Item
+                            onClick={() => console.log("View", cateogry)}
+                          >
+                            <i className="fa-solid fa-eye text-success me-2"></i>{" "}
+                            View
+                          </Dropdown.Item>
+                          <Dropdown.Item
+                            onClick={() => handleEditShow(cateogry)}
+                          >
+                            <i className="fa-solid fa-pen-to-square text-success me-2"></i>{" "}
+                            Edit
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleShow(cateogry)}>
+                            <i className="fa-solid fa-trash-can text-success me-2"></i>
+                            Delete
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4">
+                    <NoData />
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4">
-                  <NoData />
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

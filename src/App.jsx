@@ -20,6 +20,7 @@ import CategoriesList from "./CategoriesModule/Components/CategoriesList/Categor
 import CategoriesData from "./CategoriesModule/Components/CategoriesData/CategoriesData";
 import ProtectedRoute from "./Shared/Components/ProtectedRoute/ProtectedRoute";
 import FavoritesList from "./FavoritesModule/Components/FavoritesList/FavoritesList";
+import ChangePassword from "./AuthModule/Components/ChangePassword/ChangePassword";
 
 function App() {
   const router = createBrowserRouter([
@@ -48,9 +49,38 @@ function App() {
         { index: true, element: <Dashboard /> },
 
         // Shared routes - accessible by both Admin and Users
-        { path: "recipes", element: <RecipesList /> },
-        { path: "recipes-data", element: <RecipesData /> },
-        { path: "recipes-data/:id", element: <RecipesData /> },
+        {
+          path: "recipes",
+          element: (
+            <ProtectedRoute allowedRoles={["SuperAdmin", "SystemUser"]}>
+              <RecipesList />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "recipes-data",
+          element: (
+            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
+              <RecipesData />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "recipes-data/:id",
+          element: (
+            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
+              <RecipesData />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "change-password",
+          element: (
+            <ProtectedRoute allowedRoles={["SuperAdmin", "SystemUser"]}>
+              <ChangePassword />
+            </ProtectedRoute>
+          ),
+        },
 
         // Admin only routes
         {

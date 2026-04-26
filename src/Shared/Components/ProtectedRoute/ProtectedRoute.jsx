@@ -11,11 +11,16 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/" />;
   }
 
+  // Wait for context to load data if token exists but state is null
+  if (localStorage.getItem("token") && !logindData) {
+    return null; // This tells React to wait and not render anything until logindData is ready
+  }
+
   // If allowedRoles is provided, check user's role
   if (allowedRoles && allowedRoles.length > 0) {
     if (!allowedRoles.includes(logindData?.userGroup)) {
       toast.error(
-        "Access Denied - You don't have permission to access this page"
+        "Access Denied - You don't have permission to access this page",
       );
       return <Navigate to="/dashboard" replace />;
     }
