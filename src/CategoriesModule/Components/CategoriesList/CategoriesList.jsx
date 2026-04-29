@@ -7,6 +7,10 @@ import Header from "../../../Shared/Components/Header/Header";
 import DeleteConfirmation from "../../../Shared/Components/DeleteConfirmation/DeleteConfirmation";
 import NoData from "../../../Shared/Components/NoData/NoData";
 import HeaderImg2 from "../../../assets/images/Header2.png";
+import TablePagination from "../../../Shared/Components/TablePagination/TablePagination";
+import TableSearch from "../../../Shared/Components/TableSearch/TableSearch";
+import LoadingOverlay from "../../../Shared/Components/LoadingOverlay/LoadingOverlay";
+import { toast } from "react-toastify";
 
 export default function CategoriesList() {
   //==============================States==============================
@@ -16,6 +20,12 @@ export default function CategoriesList() {
   const [show, setShow] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  //==============================Pagination State==============================
+  const [pagesCount, setPagesCount] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [nameValue, setNameValue] = useState("");
 
   //==============================Form==============================
   const {
@@ -65,19 +75,34 @@ export default function CategoriesList() {
   };
 
   //==============================Get All Categories==============================
-  const getAllCategories = async () => {
+  const getAllCategories = async (pageNumber = 1, pageSize = 10, nameValue) => {
+    setIsLoading(true);
     try {
       let response = await axios.get(
-        "https://upskilling-egypt.com:3006/api/v1/Category/?pageSize=10&pageNumber=1",
+        "https://upskilling-egypt.com:3006/api/v1/Category",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
+          params: {
+            pageNumber: pageNumber,
+            pageSize: pageSize,
+            name: nameValue,
+          },
         },
       );
+
       setCategoriesList(response.data.data);
+      setPagesCount(
+        Array(response.data.totalNumberOfPages)
+          .fill()
+          .map((_, index) => index + 1),
+      );
+      setCurrentPage(pageNumber);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -113,8 +138,9 @@ export default function CategoriesList() {
           },
         },
       );
+
       reset();
-      getAllCategories();
+      await getAllCategories(1, 10, "");
       handleAddClose();
     } catch (error) {
       console.log(error);
@@ -137,7 +163,7 @@ export default function CategoriesList() {
         },
       );
       reset();
-      getAllCategories();
+      await getAllCategories(1, 10, "");
       handleAddClose();
     } catch (error) {
       console.log(error);
@@ -147,89 +173,21 @@ export default function CategoriesList() {
   };
 
   useEffect(() => {
-    getAllCategories();
+    getAllCategories(1, 10, "", true);
   }, []);
 
+  //==============================Get Name Values==============================
+  const getNameValues = (e) => {
+    setNameValue(e.target.value);
+    getAllCategories(1, 10, e.target.value);
+  };
+
   return (
-    <div>
-      {/*========================== Delete Modal ==========================*/}
-      <Modal
-        show={show}
-        onHide={handleClose}
-        centered
-        contentClassName="delete-modal"
-      >
-        <Modal.Header className="border-0 d-flex justify-content-end p-2 pt-3 pe-3 pb-0">
-          <i
-            className="fa-solid fa-circle-xmark text-danger fs-3 cursor-pointer"
-            onClick={handleClose}
-            style={{ cursor: "pointer" }}
-          ></i>
-        </Modal.Header>
-        <Modal.Body className="px-lg-5 px-4 pt-0">
-          <DeleteConfirmation deleteItem="Category" itemName={categoryName} />
-        </Modal.Body>
-        <div className="px-lg-5 px-4 pb-4">
-          <hr className="my-3 opacity-25" />
-          <div className="text-end">
-            <button
-              className="btn btn-delete px-5 py-2"
-              onClick={deleteCategories}
-            >
-              Delete this item
-            </button>
-          </div>
-        </div>
-      </Modal>
+    <div className="position-relative">
+      {/*========================== Page Loading Overlay ==========================*/}
+      {isLoading && categoriesList.length === 0 && <LoadingOverlay />}
 
-      {/*========================== Add/Edit Category Modal ==========================*/}
-      <Modal show={showAdd} onHide={handleAddClose} centered>
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold">
-            {categoryId === 0 ? "Add" : "Edit"} Category
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="mb-4">
-              <input
-                type="text"
-                className={`form-control bg-light border-0 py-3 rounded-3 ${
-                  errors.name ? "is-invalid" : ""
-                }`}
-                placeholder="Category Name"
-                {...register("name", { required: "Category name is required" })}
-              />
-              {errors.name && (
-                <span className="text-danger mt-1 d-block small">
-                  {errors.name.message}
-                </span>
-              )}
-            </div>
-            <div className="d-flex justify-content-end border-top pt-3">
-              <button
-                disabled={isLoading}
-                className="btn btn-success px-5 py-2 fw-bold text-white rounded-3 shadow-sm d-flex align-items-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    Loading...
-                  </>
-                ) : (
-                  <>{categoryId === 0 ? "Save" : "Update"}</>
-                )}
-              </button>
-            </div>
-          </form>
-        </Modal.Body>
-      </Modal>
-
-      {/*========================== Header Section ==========================*/}
+      {/*========================== 1. Header Section ==========================*/}
       <Header
         title={"Categories Items"}
         description={
@@ -238,8 +196,8 @@ export default function CategoriesList() {
         imgURL={HeaderImg2}
       ></Header>
 
-      {/*========================== Category Title Section ==========================*/}
-      <div className="title p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-3">
+      {/*========================== 2. Category Title Section ==========================*/}
+      <div className="title px-3 py-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-3">
         <div>
           <h4 className="fw-bold mb-0">Categories Table Details</h4>
           <p className="text-muted mb-0">You can check all details</p>
@@ -252,7 +210,10 @@ export default function CategoriesList() {
         </button>
       </div>
 
-      {/*========================== Categories Table Section ==========================*/}
+      {/*========================== 3. Search Section ==========================*/}
+      <TableSearch onChange={getNameValues} />
+
+      {/*========================== 4. Categories Table Section ==========================*/}
       <div className="table-container m-3 shadow-sm">
         <div className="table-responsive">
           <table className="table table-striped mb-0">
@@ -321,6 +282,92 @@ export default function CategoriesList() {
           </table>
         </div>
       </div>
+
+      {/*========================== 5. Pagination Section ==========================*/}
+      <TablePagination
+        pagesCount={pagesCount}
+        currentPage={currentPage}
+        onChange={(pageNo) => getAllCategories(pageNo, 10)}
+      />
+
+      {/*========================== 6. Modals Section ==========================*/}
+
+      {/* --- Delete Modal --- */}
+      <Modal
+        show={show}
+        onHide={handleClose}
+        centered
+        contentClassName="delete-modal"
+      >
+        <Modal.Header className="border-0 d-flex justify-content-end p-2 pt-3 pe-3 pb-0">
+          <i
+            className="fa-solid fa-circle-xmark text-danger fs-3 cursor-pointer"
+            onClick={handleClose}
+            style={{ cursor: "pointer" }}
+          ></i>
+        </Modal.Header>
+        <Modal.Body className="px-lg-5 px-4 pt-0">
+          <DeleteConfirmation deleteItem="Category" itemName={categoryName} />
+        </Modal.Body>
+        <div className="px-lg-5 px-4 pb-4">
+          <hr className="my-3 opacity-25" />
+          <div className="text-end">
+            <button
+              className="btn btn-delete px-5 py-2"
+              onClick={deleteCategories}
+            >
+              Delete this item
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* --- Add/Edit Category Modal --- */}
+      <Modal show={showAdd} onHide={handleAddClose} centered>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold">
+            {categoryId === 0 ? "Add" : "Edit"} Category
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="mb-4">
+              <input
+                type="text"
+                className={`form-control bg-light border-0 py-3 rounded-3 ${
+                  errors.name ? "is-invalid" : ""
+                }`}
+                placeholder="Category Name"
+                {...register("name", { required: "Category name is required" })}
+              />
+              {errors.name && (
+                <span className="text-danger mt-1 d-block small">
+                  {errors.name.message}
+                </span>
+              )}
+            </div>
+            <div className="d-flex justify-content-end border-top pt-3">
+              <button
+                disabled={isLoading}
+                className="btn btn-success px-5 py-2 fw-bold text-white rounded-3 shadow-sm d-flex align-items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Loading...
+                  </>
+                ) : (
+                  <>{categoryId === 0 ? "Save" : "Update"}</>
+                )}
+              </button>
+            </div>
+          </form>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }

@@ -6,13 +6,18 @@ import NoData from "../../../Shared/Components/NoData/NoData";
 import { toast } from "react-toastify";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-
+import TablePagination from "../../../Shared/Components/TablePagination/TablePagination";
+import LoadingOverlay from "../../../Shared/Components/LoadingOverlay/LoadingOverlay";
 
 export default function FavoritesList() {
   const [favoritesList, setFavoritesList] = useState([]);
   const [show, setShow] = useState(false);
   const [favoriteId, setFavoriteId] = useState(0);
-  
+
+  //==================== Pagination State ====================
+  const [pagesCount, setPagesCount] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClose = () => setShow(false);
   const handleShow = (fav) => {
@@ -20,7 +25,8 @@ export default function FavoritesList() {
     setShow(true);
   };
 
-  const getAllFavorites = async () => {
+  const getAllFavorites = async (pageNumber = 1, pageSize = 10) => {
+    setIsLoading(true);
     try {
       let response = await axios.get(
         "https://upskilling-egypt.com:3006/api/v1/userRecipe/",
@@ -28,11 +34,23 @@ export default function FavoritesList() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+          params: {
+            pageNumber: pageNumber,
+            pageSize: pageSize,
+          },
+        },
       );
       setFavoritesList(response.data.data);
+      setPagesCount(
+        Array(response.data.totalNumberOfPages)
+          .fill()
+          .map((_, index) => index + 1),
+      );
+      setCurrentPage(pageNumber);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -44,7 +62,7 @@ export default function FavoritesList() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       toast.success("Removed from favorites");
       getAllFavorites();
@@ -60,7 +78,10 @@ export default function FavoritesList() {
   }, []);
 
   return (
-    <div>
+    <div className="position-relative">
+      {/*========================== Page Loading Overlay ==========================*/}
+      {isLoading && favoritesList.length === 0 && <LoadingOverlay />}
+
       <Modal show={show} onHide={handleClose} backdrop="static" centered>
         <Modal.Header closeButton>Confirm Delete</Modal.Header>
         <Modal.Body>Are you sure you want to delete this favorite?</Modal.Body>
@@ -144,6 +165,12 @@ export default function FavoritesList() {
           </div>
         )}
       </div>
+
+      <TablePagination
+        pagesCount={pagesCount}
+        currentPage={currentPage}
+        onChange={(pageNo) => getAllFavorites(pageNo, 10)}
+      />
     </div>
   );
 }

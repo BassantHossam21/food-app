@@ -6,11 +6,18 @@ import NoData from "../../../Shared/Components/NoData/NoData";
 import Modal from "react-bootstrap/Modal";
 import DeleteConfirmation from "../../../Shared/Components/DeleteConfirmation/DeleteConfirmation";
 import { Dropdown } from "react-bootstrap";
+import TablePagination from "../../../Shared/Components/TablePagination/TablePagination";
+import TableSearch from "../../../Shared/Components/TableSearch/TableSearch";
+import LoadingOverlay from "../../../Shared/Components/LoadingOverlay/LoadingOverlay";
 
 export default function Userslist() {
   const [usersList, setUsersList] = useState([]);
   const [userId, setUserId] = useState(0);
   const [userName, setUserName] = useState("");
+  const [pagesCount, setPagesCount] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [nameValue, setNameValue] = useState("");
 
   const [show, setShow] = useState(false);
 
@@ -21,20 +28,33 @@ export default function Userslist() {
     setUserName(user.userName);
   };
 
-  const getAllUsers = async () => {
+  const getAllUsers = async (pageNumber = 1, pageSize = 10, userNameValue) => {
+    setIsLoading(true);
     try {
       let response = await axios.get(
-        "https://upskilling-egypt.com:3006/api/v1/Users/?pageSize=10&pageNumber=1",
+        "https://upskilling-egypt.com:3006/api/v1/Users/",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+          params: {
+            pageNumber: pageNumber,
+            pageSize: pageSize,
+            userName: userNameValue,
+          },
+        },
       );
-      console.log(response.data.data);
       setUsersList(response.data.data);
+      setPagesCount(
+        Array(response.data.totalNumberOfPages)
+          .fill()
+          .map((_, index) => index + 1),
+      );
+      setCurrentPage(pageNumber);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,7 +67,7 @@ export default function Userslist() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       console.log(response);
       getAllUsers();
@@ -58,11 +78,19 @@ export default function Userslist() {
   };
 
   useEffect(() => {
-    getAllUsers();
+    getAllUsers(1, 10, "");
   }, []);
 
+  const getNameValues = (e) => {
+    setNameValue(e.target.value);
+    getAllUsers(1, 10, e.target.value);
+  };
+
   return (
-    <div>
+    <div className="position-relative">
+      {/*========================== Page Loading Overlay ==========================*/}
+      {isLoading && usersList.length === 0 && <LoadingOverlay />}
+
       {/*========================== Delete Modal ==========================*/}
       <Modal
         show={show}
@@ -83,10 +111,7 @@ export default function Userslist() {
         <div className="px-lg-5 px-4 pb-4">
           <hr className="my-3 opacity-25" />
           <div className="text-end">
-            <button
-              className="btn btn-delete px-5 py-2"
-              onClick={deleteUsers}
-            >
+            <button className="btn btn-delete px-5 py-2" onClick={deleteUsers}>
               Delete this item
             </button>
           </div>
@@ -102,12 +127,15 @@ export default function Userslist() {
       ></Header>
 
       {/*========================== Users Title Section ==========================*/}
-      <div className="title p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-3">
+      <div className="title px-3 py-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-3">
         <div>
           <h4 className="fw-bold mb-0">Users Table Details</h4>
           <p className="text-muted mb-0">You can check all details</p>
         </div>
       </div>
+
+      {/*========================== Search Section ==========================*/}
+      <TableSearch onChange={getNameValues} />
 
       {/*========================== Users Table Section ==========================*/}
       <div className="table-container m-3 shadow-sm">
@@ -124,56 +152,62 @@ export default function Userslist() {
                 </th>
               </tr>
             </thead>
-          <tbody>
-            {usersList.length > 0 ? (
-              usersList.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.userName}</td>
-                  <td>{new Date(user.creationDate).toLocaleDateString()}</td>
-                  <td>{user.email}</td>
-                  <td>{user.group.name}</td>
+            <tbody>
+              {usersList.length > 0 ? (
+                usersList.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.userName}</td>
+                    <td>{new Date(user.creationDate).toLocaleDateString()}</td>
+                    <td>{user.email}</td>
+                    <td>{user.group.name}</td>
 
-                  <td className="text-center">
-                    <Dropdown>
-                      <Dropdown.Toggle
-                        variant="link"
-                        id="dropdown-basic"
-                        className="text-dark bg-transparent border-0 p-0 shadow-none outline-none"
-                      >
-                        <i
-                          className="fa-solid fa-ellipsis-vertical fs-5"
-                          aria-hidden="true"
-                        ></i>
-                      </Dropdown.Toggle>
-
-                      <Dropdown.Menu className="shadow-sm border-0 rounded-3">
-                        <Dropdown.Item
-                          onClick={() => console.log("View", user)}
+                    <td className="text-center">
+                      <Dropdown>
+                        <Dropdown.Toggle
+                          variant="link"
+                          id="dropdown-basic"
+                          className="text-dark bg-transparent border-0 p-0 shadow-none outline-none"
                         >
-                          <i className="fa-solid fa-eye text-success me-2"></i>{" "}
-                          View
-                        </Dropdown.Item>
-                        
-                        <Dropdown.Item onClick={() => handleShow(user)}>
-                          <i className="fa-solid fa-trash-can text-success me-2"></i>{" "}
-                          Delete
-                        </Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
+                          <i
+                            className="fa-solid fa-ellipsis-vertical fs-5"
+                            aria-hidden="true"
+                          ></i>
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu className="shadow-sm border-0 rounded-3">
+                          <Dropdown.Item
+                            onClick={() => console.log("View", user)}
+                          >
+                            <i className="fa-solid fa-eye text-success me-2"></i>{" "}
+                            View
+                          </Dropdown.Item>
+
+                          <Dropdown.Item onClick={() => handleShow(user)}>
+                            <i className="fa-solid fa-trash-can text-success me-2"></i>{" "}
+                            Delete
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5">
+                    <NoData />
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5">
-                  <NoData />
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      <TablePagination
+        pagesCount={pagesCount}
+        currentPage={currentPage}
+        onChange={(pageNo) => getAllUsers(pageNo, 10)}
+      />
     </div>
   );
 }

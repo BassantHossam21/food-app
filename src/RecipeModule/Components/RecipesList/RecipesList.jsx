@@ -10,13 +10,21 @@ import { Dropdown } from "react-bootstrap";
 import { useContext } from "react";
 import { AuthContext } from "../../../Context/AuthContext";
 import { toast } from "react-toastify";
+import TablePagination from "../../../Shared/Components/TablePagination/TablePagination";
+import TableSearch from "../../../Shared/Components/TableSearch/TableSearch";
+import LoadingOverlay from "../../../Shared/Components/LoadingOverlay/LoadingOverlay";
 
 export default function RecipesList() {
-
   //==================== Recipes Data ====================
   const [recipesList, setRecipesList] = useState([]);
   const { logindData } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  //==================== Pagination State ====================
+  const [pagesCount, setPagesCount] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [nameValue, setNameValue] = useState("");
 
   //==================== Delete Modal State ====================
   const [show, setShow] = useState(false);
@@ -33,20 +41,34 @@ export default function RecipesList() {
   };
 
   //==================== Get All Recipes ====================
-  const getAllRecipes = async () => {
+  const getAllRecipes = async (pageNumber = 1, pageSize = 10, nameValue) => {
+    setIsLoading(true);
     try {
       let response = await axios.get(
-        "https://upskilling-egypt.com:3006/api/v1/Recipe/?pageSize=10&pageNumber=1",
+        "https://upskilling-egypt.com:3006/api/v1/Recipe/",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+          params: {
+            pageNumber: pageNumber,
+            pageSize: pageSize,
+            name: nameValue,
+          },
+        },
       );
       console.log(response.data.data);
       setRecipesList(response.data.data);
+      setPagesCount(
+        Array(response.data.totalNumberOfPages)
+          .fill()
+          .map((_, index) => index + 1),
+      );
+      setCurrentPage(pageNumber);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,7 +81,7 @@ export default function RecipesList() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       console.log(response);
       getAllRecipes();
@@ -73,12 +95,13 @@ export default function RecipesList() {
   const addToFav = async (recipeId) => {
     try {
       let response = await axios.post(
-        `https://upskilling-egypt.com:3006/api/v1/userRecipe/`,{recipeId:recipeId},
+        `https://upskilling-egypt.com:3006/api/v1/userRecipe/`,
+        { recipeId: recipeId },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       console.log(response);
       toast.success("Recipe added to favorites");
@@ -89,11 +112,19 @@ export default function RecipesList() {
   };
 
   useEffect(() => {
-    getAllRecipes();
+    getAllRecipes(1, 10, "");
   }, []);
 
+  const getNameValues = (e) => {
+    setNameValue(e.target.value);
+    getAllRecipes(1, 10, e.target.value);
+  };
+
   return (
-    <div>
+    <div className="position-relative">
+      {/*========================== Page Loading Overlay ==========================*/}
+      {isLoading && recipesList.length === 0 && <LoadingOverlay />}
+
       {/*========================== Delete Modal ==========================*/}
       <Modal
         show={show}
@@ -114,10 +145,7 @@ export default function RecipesList() {
         <div className="px-lg-5 px-4 pb-4">
           <hr className="my-3 opacity-25" />
           <div className="text-end">
-            <button
-              className="btn btn-delete px-5 py-2"
-              onClick={deleteRecipe}
-            >
+            <button className="btn btn-delete px-5 py-2" onClick={deleteRecipe}>
               Delete this item
             </button>
           </div>
@@ -133,7 +161,7 @@ export default function RecipesList() {
       ></Header>
 
       {/*========================== Recipes Title Section ==========================*/}
-      <div className="title p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-3">
+      <div className="title px-3 py-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-3">
         <div>
           <h4 className="fw-bold mb-0">Recipes Table Details</h4>
           <p className="text-muted mb-0">You can check all details</p>
@@ -148,6 +176,9 @@ export default function RecipesList() {
         )}
       </div>
 
+      {/*========================== Search Section ==========================*/}
+      <TableSearch onChange={getNameValues} />
+
       {/*========================== Recipes Table Section ==========================*/}
       <div className="table-container m-3 shadow-sm">
         <div className="table-responsive">
@@ -160,7 +191,9 @@ export default function RecipesList() {
                 <th scope="col">Description</th>
                 <th scope="col">Tag</th>
                 <th scope="col">Category</th>
-                <th scope="col" className="text-center">Actions</th>
+                <th scope="col" className="text-center">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -236,6 +269,12 @@ export default function RecipesList() {
           </table>
         </div>
       </div>
+
+      <TablePagination
+        pagesCount={pagesCount}
+        currentPage={currentPage}
+        onChange={(pageNo) => getAllRecipes(pageNo, 10)}
+      />
     </div>
   );
 }
