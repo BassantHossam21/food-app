@@ -84,7 +84,7 @@ export default function RecipesList() {
         },
       );
       console.log(response);
-      getAllRecipes();
+      await getAllRecipes(currentPage, 10, nameValue);
       handleClose();
     } catch (error) {
       console.log(error);
@@ -105,7 +105,7 @@ export default function RecipesList() {
       );
       console.log(response);
       toast.success("Recipe added to favorites");
-      getAllRecipes();
+      await getAllRecipes(currentPage, 10, nameValue);
     } catch (error) {
       console.log(error);
     }

@@ -9,6 +9,7 @@ import { Dropdown } from "react-bootstrap";
 import TablePagination from "../../../Shared/Components/TablePagination/TablePagination";
 import TableSearch from "../../../Shared/Components/TableSearch/TableSearch";
 import LoadingOverlay from "../../../Shared/Components/LoadingOverlay/LoadingOverlay";
+import { toast } from "react-toastify";
 
 export default function Userslist() {
   const [usersList, setUsersList] = useState([]);
@@ -59,7 +60,6 @@ export default function Userslist() {
   };
 
   const deleteUsers = async () => {
-    console.log(userId);
     try {
       let response = await axios.delete(
         `https://upskilling-egypt.com:3006/api/v1/Users/${userId}`,
@@ -69,10 +69,11 @@ export default function Userslist() {
           },
         },
       );
-      console.log(response);
-      getAllUsers();
+      toast.success("User deleted successfully!");
+      await getAllUsers(currentPage, 10, nameValue);
       handleClose();
     } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete user!");
       console.log(error);
     }
   };

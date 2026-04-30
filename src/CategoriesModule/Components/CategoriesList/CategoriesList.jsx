@@ -118,7 +118,7 @@ export default function CategoriesList() {
         },
       );
 
-      getAllCategories();
+      await getAllCategories(currentPage, 10, nameValue);
       handleClose();
     } catch (error) {
       console.log(error);
@@ -163,7 +163,7 @@ export default function CategoriesList() {
         },
       );
       reset();
-      await getAllCategories(1, 10, "");
+      await getAllCategories(currentPage, 10, nameValue);
       handleAddClose();
     } catch (error) {
       console.log(error);
